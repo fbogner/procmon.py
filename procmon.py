@@ -13,8 +13,17 @@ from string import whitespace
 from time import sleep
 from traceback import format_exc
 
-# defines which access to run
-exe_cmdline = r"C:\Program Files (x86)\Dropbox\Client\Dropbox.exe"
+parser = ArgumentParser()
+parser.add_argument('-c', '--cmdline', help='The command to run', required=True)
+args = parser.parse_args()
+
+# run a custom executable
+if args.cmdline:
+	exe_cmdline=args.cmdline
+else:
+	print "[!] You have to specify an application to execute"
+	parser.print_usage()
+	sys.exit(1)
 
 # defines how long we want to run this exe
 runtime = 20
@@ -27,7 +36,7 @@ path_whitelist = [
 				]
 
 # where is procmon
-procmonexe = r"C:\Users\olph\ProcMon\procmon.exe"
+procmonexe = r"ProcMon\procmon.exe"
 
 # globals
 use_pmc = False;
@@ -126,9 +135,10 @@ def parse_result(csv_file,exe_to_monitor):
 			if field[3] == 'CreateFile':
 				path = field[4]
 				#print "Path %s" % path
-				if not path.startswith(tuple(path_whitelist)):					
-					print "[-] Access to path %s looks strange" % path
-					raw_input("Press Enter to continue...")
+				if not path.startswith(tuple(path_whitelist)):
+					if not os.path.isdir(path):
+						print "[-] Access to path %s looks strange" % path
+						raw_input("Press Enter to continue...")
 		except:
 			print "[-] Failed to parse event"
 			raw_input("Press Enter to continue...")
@@ -159,7 +169,7 @@ def main():
 	
 	global exe_cmdline
 	print('[*] Launching command line: %s' % exe_cmdline)
-	subprocess.Popen(exe_cmdline)
+	subprocess.Popen(exe_cmdline,cwd=os.path.dirname(exe_cmdline))
 	
 	global runtime
 	for i in range(runtime):
